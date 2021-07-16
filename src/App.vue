@@ -1,17 +1,33 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div
+    class="
+      flex flex-col
+      content-center
+      h-screen
+      bg-gradient-to-br
+      from-memoYellow-bg-light
+      via-memoYellow-bg
+      to-memoYellow-bg
+      ...
+    "
+  >
+    <!-- <img alt="Vue logo" src="./assets/logo.png" /> -->
+    <Header msg="Welcome to Your Vue.js App" />
+    <Memo />
+  </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Header from "./components/Header.vue";
+import Memo from "./components/Memo.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    HelloWorld
-  }
-}
+    Header,
+    Memo,
+  },
+};
 </script>
 
 <style>
@@ -21,6 +37,5 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 </style>
