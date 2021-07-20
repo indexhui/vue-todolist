@@ -83,15 +83,29 @@
             v-for="(todo,index) in filteredTodos"
             :key="todo.id"
             class="group py-2 border-b-2 border-dashed border-green-500	"
+            :class="{'bg-yellow-100	': todo.id === currentEditTodo.id}"
           >
-            <div class="relative w-full group ">
-              <input class="h-8 w-8 absolute left-0 opacity-0	 appearance-none cursor-pointer" type="checkbox" v-model="todo.completed"  />
-              <label for="" class="flex items-center ">
-                <div :class="{'bg-toggle': todo.completed}"  class="bg-label bg-center bg-no-repeat bg-cover h-8 w-8 "></div>
-                <div :class="{'line-through': todo.completed}">{{index+1}}.{{todo.title}}</div>
+            <div class="relative w-full group " :class="{'bg-red': todo.id === currentEditTodo.id}">
+              <input class="h-8 w-8 absolute left-0 opacity-0	 appearance-none cursor-pointer" type="checkbox" v-model="todo.completed" v-show="todo.id !== currentEditTodo.id " />
+              <label for="" class="flex items-center cursor-pointer"  >
+                <div v-if="todo.id !== currentEditTodo.id " :class="{'bg-toggle': todo.completed}"  class="bg-label bg-center bg-no-repeat bg-cover h-8 w-8 "></div>
+                <div
+                  @dblclick="editTodo(todo)"
+                  v-show="todo.id !== currentEditTodo.id "
+                  class="w-full text-left"
+                  :class="{'line-through': todo.completed}" >{{index+1}}.{{todo.title}}</div>
+                <input
+                  @keyup.esc="cancelEdit"
+                  @keyup.enter="doneEdit"
+                  @blur="doneEdit"
+                  v-show="todo.id === currentEditTodo.id "
+                  v-model="currentEditTodo.title"
+                  class="w-full h-8 bg-transparent pl-10 focus:outline-none"
+                />
               </label>
               <div
                 @click="removeTodo(todo)"
+                v-show="todo.id !== currentEditTodo.id "
                 class="h-8 w-8 absolute right-0 top-0 bottom-0 opacity-0 cursor-pointer transition-all	 group-hover:opacity-100">
                   x
               </div>
@@ -101,7 +115,6 @@
               {{pluralize}}
           </div>
         </ul>
-        <button @click="saveStorage">save</button>
         <div class="flex-none">
           <input class="bg-transparent w-full pl-8 py-1 focus:outline-none	focus:bg-yellow-100" v-model="newTodo"  @keyup.enter="addTodo" type="text" placeholder="+ 需要做什麼？">
         </div>
@@ -128,7 +141,8 @@ export default {
       isToggle: true,
       visibility: "all",
       newTodo: '',
-      todos: []
+      todos: [],
+      currentEditTodo:{},
     }
   },
   methods: {
@@ -151,6 +165,25 @@ export default {
     },
     removeTodo(todo) {
       this.todos = this.todos.filter(_todo => _todo.id !== todo.id)
+    },
+    editTodo(todo){
+      this.currentEditTodo = {...todo};
+    },
+    cancelEdit(){
+      this.currentEditTodo = {};
+    },
+    doneEdit(){
+      this.todos = this.todos.map(todo => {
+        if(todo.id === this.currentEditTodo.id){
+          return{
+            ...this.currentEditTodo
+          }
+        }else{
+          return todo;
+        }
+      }).filter(todo => todo.title.trim())
+
+      this.currentEditTodo = {};
     },
     removeCompleted() {
       this.todos = todosFilters.active(this.todos);
@@ -185,7 +218,7 @@ export default {
     }
   },
   created() {
-   this.todos = JSON.parse(localStorage.getItem(STORAGE_KEY)|| [])
+   this.todos = JSON.parse(localStorage.getItem(STORAGE_KEY))|| [{"id":"0ae9b8b5-ad94-4c34-99d2-92909116e7e2","title":"demo","completed":false}]
   },
   props: {
     msg: String,
