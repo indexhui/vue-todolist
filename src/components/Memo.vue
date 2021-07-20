@@ -80,7 +80,7 @@
         </div>
         <ul class="flex-grow " v-if="todos.length">
           <li
-            v-for="todo in filteredTodos"
+            v-for="(todo,index) in filteredTodos"
             :key="todo.id"
             class="group py-2 border-b-2 border-dashed border-green-500	"
           >
@@ -88,7 +88,7 @@
               <input class="h-8 w-8 absolute left-0 opacity-0	 appearance-none cursor-pointer" type="checkbox" v-model="todo.completed"  />
               <label for="" class="flex items-center ">
                 <div :class="{'bg-toggle': todo.completed}"  class="bg-label bg-center bg-no-repeat bg-cover h-8 w-8 "></div>
-                <div :class="{'line-through': todo.completed}">{{todo.title}}</div>
+                <div :class="{'line-through': todo.completed}">{{index+1}}.{{todo.title}}</div>
               </label>
               <div
                 @click="removeTodo(todo)"
@@ -97,10 +97,11 @@
               </div>
             </div>
           </li>
-          <div class="text-gray-400 text-right pr-2 ">
-            {{todos.filter((todo) => !todo.completed).length}} items left
+          <div v-show="remaining" class="text-gray-400 text-right pr-2 ">
+              {{pluralize}}
           </div>
         </ul>
+        <button @click="saveStorage">save</button>
         <div class="flex-none">
           <input class="bg-transparent w-full pl-8 py-1 focus:outline-none	focus:bg-yellow-100" v-model="newTodo"  @keyup.enter="addTodo" type="text" placeholder="+ 需要做什麼？">
         </div>
@@ -112,7 +113,9 @@
 <script>
 import { v4 as uuidv4 } from 'uuid';
 
-const filters = {
+const STORAGE_KEY = "vue-todolist";
+
+const todosFilters = {
   all: (todos) => todos,
   active: (todos) => todos.filter((todo) => !todo.completed),
   completed: (todos) => todos.filter((todo) => todo.completed)
@@ -120,6 +123,14 @@ const filters = {
 
 export default {
   name: "Memo",
+  data () {
+    return {
+      isToggle: true,
+      visibility: "all",
+      newTodo: '',
+      todos: []
+    }
+  },
   methods: {
     addTodo() {
       console.log("addTodo");
@@ -142,49 +153,40 @@ export default {
       this.todos = this.todos.filter(_todo => _todo.id !== todo.id)
     },
     removeCompleted() {
-      this.todos = filters.active(this.todos);
+      this.todos = todosFilters.active(this.todos);
     },
     setVisibility(visibility) {
       this.visibility = visibility;
     },
-  },
-  data () {
-    return {
-      isToggle: true,
-      visibility: "all",
-      newTodo: '',
-      todos: [
-        {
-          id: uuidv4(),
-          title: '表現句型 200',
-          completed: false
-        },
-        {
-          id: uuidv4(),
-          title: 'N3 模擬試題',
-          completed: false
-        },
-        {
-          id: uuidv4(),
-          title: 'N3 閱讀測驗',
-          completed: false
-        },
-      ]
-    }
+    saveStorage() {
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(this.todos))
+    },
   },
   computed: {
     filteredTodos() {
-      return filters[this.visibility](this.todos);
+      return todosFilters[this.visibility](this.todos);
     },
-    // remaining() {
-    //   console.log("active: ", filters.active(this.todos));
-    //   return filters.active(this.todos).length;
-    // }
+    remaining() {
+      return todosFilters.active(this.todos).length;
+    },
+    pluralize() {
+      const n = todosFilters.active(this.todos).length;
+      return n === 1 ? `${n}item left` : `${n}items left`;
+    },
   },
-    //   isToggle: {
-    //   type: Boolean,
-    //   default: true
-    // },
+
+  watch: {
+    todos: {
+      handler: function(){
+        console.log('todos changed');
+        this.saveStorage();
+      },
+      deep: true,
+    }
+  },
+  created() {
+   this.todos = JSON.parse(localStorage.getItem(STORAGE_KEY)|| [])
+  },
   props: {
     msg: String,
     // isToggle: {
